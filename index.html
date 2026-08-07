@@ -1,0 +1,1716 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Material 3 Depth | Polska Tube</title>
+	<link rel="manifest" href="manifest.json">
+<script>
+if ('serviceWorker' in navigator) {
+	window.addEventListener('load', () => {
+	navigator.serviceWorker.register('sw.js').then(registration => {
+	console.log('ServiceWorker registration successful with scope: ', registration.scope);
+	}, err => {
+	console.log('ServiceWorker registration failed: ', err);
+	}).catch(err => {
+	console.log(err)
+	});
+	});
+}
+</script>
+    
+    
+    
+
+    <!-- Google Fonts & Material Symbols -->
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&family=Google+Sans:wght@400;500;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" rel="stylesheet">
+
+    <!-- Import Map for Material Web & Color Utilities -->
+    <script type="importmap">
+    {
+        "imports": {
+            "@material/web/": "https://esm.run/@material/web/",
+            "@material/material-color-utilities": "https://esm.run/@material/material-color-utilities"
+        }
+    }
+    </script>
+
+    <style>
+        /* * =========================================
+         * 1. CSS Variables & Material Design Tokens
+         * =========================================
+         */
+        :root {
+            /* Base Colors (Will be overridden by JS / Dynamic Color Engine) */
+            --md-sys-color-primary: #6750a4;
+            --md-sys-color-on-primary: #ffffff;
+            --md-sys-color-primary-container: #eaddff;
+            --md-sys-color-on-primary-container: #21005d;
+            --md-sys-color-secondary: #625b71;
+            --md-sys-color-on-secondary: #ffffff;
+            --md-sys-color-secondary-container: #e8def8;
+            --md-sys-color-on-secondary-container: #1d192b;
+            --md-sys-color-tertiary: #7d5260;
+            --md-sys-color-on-tertiary: #ffffff;
+            --md-sys-color-tertiary-container: #ffd8e4;
+            --md-sys-color-on-tertiary-container: #31111d;
+            --md-sys-color-error: #b3261e;
+            --md-sys-color-on-error: #ffffff;
+            --md-sys-color-error-container: #f9dedc;
+            --md-sys-color-on-error-container: #410e0b;
+            --md-sys-color-background: #fffbfe;
+            --md-sys-color-on-background: #1c1b1f;
+            --md-sys-color-surface: #fffbfe;
+            --md-sys-color-on-surface: #1c1b1f;
+            --md-sys-color-surface-variant: #e7e0ec;
+            --md-sys-color-on-surface-variant: #49454f;
+            --md-sys-color-outline: #79747e;
+            --md-sys-color-outline-variant: #c4c7c5;
+            --md-sys-color-inverse-surface: #313033;
+            --md-sys-color-inverse-on-surface: #f4f0f4;
+            --md-sys-color-inverse-primary: #d0bcff;
+            
+            /* Typography */
+            --md-ref-typeface-brand: 'Google Sans', sans-serif;
+            --md-ref-typeface-plain: 'Roboto', sans-serif;
+
+            /* Liquid Glass Extensions */
+            --glass-blur: 24px;
+            --glass-opacity-light: 0.75;
+            --glass-opacity-dark: 0.65;
+            --glass-border-opacity: 0.12;
+            
+            /* Animation Curves */
+            --m3-easing-standard: cubic-bezier(0.2, 0, 0, 1);
+            --m3-easing-emphasized: cubic-bezier(0.3, 0, 0, 1);
+            --transition-duration: 0.4s;
+        }
+
+        /* Prevent unwanted text highlight */
+        * {
+            -webkit-user-select: none !important;
+            -moz-user-select: none !important;
+            -ms-user-select: none !important;
+            user-select: none !important;
+            box-sizing: border-box;
+        }
+
+        input, textarea {
+            -webkit-user-select: auto !important;
+            -moz-user-select: auto !important;
+            -ms-user-select: auto !important;
+            user-select: auto !important;
+        }
+
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: var(--md-ref-typeface-plain);
+            background-color: var(--md-sys-color-background);
+            color: var(--md-sys-color-on-background);
+            transition: background-color var(--transition-duration), color var(--transition-duration);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            overflow-x: hidden;
+            -webkit-font-smoothing: antialiased;
+        }
+
+        /* * =========================================
+         * 2. Background & Fluid Mesh (Material Depth)
+         * =========================================
+         */
+        .fluid-background {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            z-index: -1;
+            overflow: hidden;
+            filter: blur(80px);
+            opacity: 0.55;
+            transition: opacity 0.5s;
+            pointer-events: none;
+        }
+
+        .fluid-blob {
+            position: absolute;
+            border-radius: 50%;
+            background: var(--md-sys-color-primary-container);
+            mix-blend-mode: multiply;
+            animation: moveBlob 25s infinite alternate ease-in-out;
+            opacity: 0.6;
+        }
+
+        .fluid-blob:nth-child(2) {
+            background: var(--md-sys-color-secondary-container);
+            width: 520px;
+            height: 520px;
+            left: 10%;
+            top: 20%;
+            animation-duration: 30s;
+            animation-delay: -5s;
+        }
+
+        .fluid-blob:nth-child(3) {
+            background: var(--md-sys-color-tertiary-container);
+            width: 420px;
+            height: 420px;
+            right: 12%;
+            bottom: 10%;
+            animation-duration: 22s;
+            animation-delay: -2s;
+        }
+
+        @keyframes moveBlob {
+            0% { transform: translate(0, 0) scale(1); }
+            33% { transform: translate(8vw, 15vh) scale(1.15); }
+            66% { transform: translate(-8vw, 10vh) scale(0.85); }
+            100% { transform: translate(0, 0) scale(1); }
+        }
+
+        /* * =========================================
+         * 3. Dynamic Top Header & Search Bar
+         * =========================================
+         */
+        header {
+            position: sticky;
+            top: 0;
+            z-index: 50;
+            height: 68px;
+            padding: 0 16px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 12px;
+            background-color: rgba(var(--md-sys-color-surface-rgb, 255, 255, 255), 0.7);
+            backdrop-filter: blur(var(--glass-blur));
+            -webkit-backdrop-filter: blur(var(--glass-blur));
+            border-bottom: 1px solid rgba(128, 128, 128, var(--glass-border-opacity));
+            transition: all 0.3s var(--m3-easing-standard);
+        }
+
+        body.dark-mode header {
+            background-color: rgba(20, 20, 20, 0.7);
+        }
+
+        .app-brand {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            cursor: pointer;
+            flex-shrink: 0;
+        }
+
+        .app-brand img {
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            object-fit: cover;
+            border: 2px solid var(--md-sys-color-primary);
+            transition: transform 0.3s;
+        }
+
+        .app-brand:hover img {
+            transform: scale(1.08);
+        }
+
+        header h1 {
+            margin: 0;
+            font-family: var(--md-ref-typeface-brand);
+            font-size: 18px;
+            font-weight: 500;
+            letter-spacing: -0.2px;
+            white-space: nowrap;
+            display: none;
+        }
+
+        @media (min-width: 600px) {
+            header h1 { display: block; }
+        }
+
+        /* Dynamic Expandable Search Bar in Header */
+        .header-search-bar {
+            flex: 1;
+            max-width: 520px;
+            display: flex;
+            align-items: center;
+            background: rgba(var(--md-sys-color-surface-variant-rgb, 230, 230, 230), 0.6);
+            border: 1px solid rgba(128, 128, 128, 0.2);
+            border-radius: 28px;
+            padding: 4px 12px 4px 16px;
+            transition: all 0.3s var(--m3-easing-emphasized);
+            box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+        }
+
+        .header-search-bar:focus-within {
+            background: rgba(var(--md-sys-color-surface-rgb, 255, 255, 255), 0.95);
+            border-color: var(--md-sys-color-primary);
+            box-shadow: 0 4px 16px rgba(0,0,0,0.12);
+        }
+
+        body.dark-mode .header-search-bar {
+            background: rgba(255, 255, 255, 0.08);
+        }
+
+        body.dark-mode .header-search-bar:focus-within {
+            background: rgba(30, 30, 30, 0.95);
+        }
+
+        .header-search-input {
+            flex: 1;
+            border: none;
+            outline: none;
+            background: transparent;
+            font-family: var(--md-ref-typeface-plain);
+            font-size: 14px;
+            color: var(--md-sys-color-on-surface);
+            padding: 6px 8px;
+        }
+
+        .header-search-input::placeholder {
+            color: var(--md-sys-color-on-surface-variant);
+            opacity: 0.7;
+        }
+
+        .header-controls {
+            display: flex;
+            align-items: center;
+            gap: 2px;
+            flex-shrink: 0;
+        }
+
+        /* * =========================================
+         * 4. Floating Navigation Bar (Title-Free Design)
+         * =========================================
+         */
+        .floating-nav-container {
+            position: fixed;
+            bottom: 24px;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 100;
+            width: auto;
+            max-width: 95vw;
+        }
+
+        .custom-nav {
+            display: flex;
+            align-items: center;
+            background-color: rgba(var(--md-sys-color-surface-rgb, 255, 255, 255), var(--glass-opacity-light));
+            backdrop-filter: blur(var(--glass-blur));
+            -webkit-backdrop-filter: blur(var(--glass-blur));
+            padding: 8px 12px;
+            border-radius: 36px;
+            box-shadow: 0 10px 32px rgba(0,0,0,0.15);
+            border: 1px solid rgba(255, 255, 255, 0.25);
+            transition: all 0.4s var(--m3-easing-emphasized);
+            gap: 6px;
+        }
+
+        body.dark-mode .custom-nav {
+            background-color: rgba(30, 30, 30, var(--glass-opacity-dark));
+            border-color: rgba(255, 255, 255, 0.08);
+        }
+
+        .nav-item {
+            position: relative;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-width: 60px;
+            height: 48px;
+            cursor: pointer;
+            border-radius: 24px;
+            transition: all 0.25s var(--m3-easing-standard);
+        }
+
+        .nav-icon-container {
+            width: 52px;
+            height: 32px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            border-radius: 18px;
+            transition: background-color 0.3s var(--m3-easing-standard), transform 0.2s;
+        }
+
+        .nav-item .material-symbols-outlined {
+            font-size: 24px;
+            font-variation-settings: 'FILL' 0, 'wght' 400;
+            color: var(--md-sys-color-on-surface-variant);
+        }
+
+        /* Strict Title-Free Floating Nav */
+        .nav-label {
+            display: none !important;
+        }
+
+        .nav-item.active .nav-icon-container {
+            background-color: var(--md-sys-color-secondary-container);
+            transform: scale(1.05);
+        }
+
+        .nav-item.active .material-symbols-outlined {
+            font-variation-settings: 'FILL' 1;
+            color: var(--md-sys-color-on-secondary-container);
+        }
+
+        .nav-item:hover .nav-icon-container {
+            background-color: rgba(var(--md-sys-color-on-surface-rgb, 0,0,0), 0.08);
+        }
+
+        @media (min-width: 900px) {
+            .floating-nav-container {
+                left: 24px;
+                bottom: auto;
+                top: 50%;
+                transform: translateY(-50%);
+            }
+            .custom-nav {
+                flex-direction: column;
+                border-radius: 28px;
+                padding: 14px 8px;
+            }
+            .nav-item {
+                margin: 6px 0;
+            }
+            body { margin-left: 90px; }
+        }
+
+        /* * =========================================
+         * 5. Layout, Glass Cards & Video Components
+         * =========================================
+         */
+        main {
+            flex: 1;
+            padding: 20px 16px 120px 16px;
+            max-width: 1050px;
+            margin: 0 auto;
+            width: 100%;
+            box-sizing: border-box;
+        }
+
+        .view-section {
+            display: none;
+            animation: m3-fade-in 0.45s var(--m3-easing-emphasized) forwards;
+        }
+        .view-section.active { display: block; }
+
+        @keyframes m3-fade-in {
+            from { opacity: 0; transform: scale(0.96) translateY(16px); }
+            to { opacity: 1; transform: scale(1) translateY(0); }
+        }
+
+        .glass-card {
+            background-color: rgba(var(--md-sys-color-surface-rgb, 255,255,255), var(--glass-opacity-light));
+            backdrop-filter: blur(var(--glass-blur));
+            -webkit-backdrop-filter: blur(var(--glass-blur));
+            border-radius: 24px;
+            padding: 20px;
+            margin-bottom: 20px;
+            border: 1px solid rgba(255, 255, 255, 0.25);
+            box-shadow: 0 4px 24px rgba(0,0,0,0.06);
+            transition: transform 0.3s var(--m3-easing-standard), box-shadow 0.3s;
+        }
+
+        body.dark-mode .glass-card {
+            background-color: rgba(30, 30, 30, var(--glass-opacity-dark));
+            border-color: rgba(255, 255, 255, 0.06);
+        }
+
+        .video-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 18px;
+        }
+
+        .video-card {
+            cursor: pointer;
+            border-radius: 20px;
+            overflow: hidden;
+            background: rgba(var(--md-sys-color-surface-rgb, 255,255,255), 0.5);
+            border: 1px solid rgba(255,255,255,0.2);
+            transition: transform 0.25s var(--m3-easing-standard), box-shadow 0.25s;
+        }
+
+        body.dark-mode .video-card {
+            background: rgba(40, 40, 40, 0.4);
+            border-color: rgba(255, 255, 255, 0.08);
+        }
+
+        .video-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 28px rgba(0,0,0,0.14);
+        }
+
+        .thumbnail-container {
+            position: relative;
+            width: 100%;
+            padding-top: 56.25%; /* 16:9 Aspect */
+            background-color: #111;
+            overflow: hidden;
+        }
+
+        .thumbnail-container img {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            transition: transform 0.3s ease;
+        }
+
+        .video-card:hover .thumbnail-container img {
+            transform: scale(1.04);
+        }
+
+        .video-info {
+            display: flex;
+            padding: 12px;
+            gap: 12px;
+        }
+
+        .channel-avatar {
+            width: 38px;
+            height: 38px;
+            border-radius: 50%;
+            object-fit: cover;
+            flex-shrink: 0;
+            background-color: var(--md-sys-color-surface-variant);
+            border: 1px solid rgba(128,128,128,0.2);
+        }
+
+        .video-details {
+            flex: 1;
+            overflow: hidden;
+        }
+
+        .video-title {
+            font-family: var(--md-ref-typeface-brand);
+            font-size: 14px;
+            font-weight: 500;
+            line-height: 1.35;
+            margin: 0 0 4px 0;
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+            color: var(--md-sys-color-on-surface);
+        }
+
+        .video-meta {
+            font-size: 12px;
+            color: var(--md-sys-color-on-surface-variant);
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        /* * =========================================
+         * 6. Modals, Fullscreen, Shorts & Comments
+         * =========================================
+         */
+        .modal-overlay {
+            position: fixed;
+            top: 0; left: 0; width: 100vw; height: 100vh;
+            background: rgba(0,0,0,0.65);
+            backdrop-filter: blur(14px);
+            -webkit-backdrop-filter: blur(14px);
+            z-index: 200;
+            display: none;
+            justify-content: center;
+            align-items: flex-end;
+            transition: opacity 0.3s;
+        }
+
+        @media (min-width: 768px) {
+            .modal-overlay {
+                align-items: center;
+            }
+        }
+
+        .modal-overlay.active {
+            display: flex;
+        }
+
+        .modal-card {
+            width: 100%;
+            max-width: 920px;
+            max-height: 92vh;
+            background: var(--md-sys-color-surface);
+            color: var(--md-sys-color-on-surface);
+            border-radius: 28px 28px 0 0;
+            overflow-y: auto;
+            padding: 20px;
+            box-shadow: 0 -10px 40px rgba(0,0,0,0.3);
+            animation: slide-up 0.35s var(--m3-easing-emphasized);
+        }
+
+        @media (min-width: 768px) {
+            .modal-card {
+                border-radius: 28px;
+            }
+        }
+
+        @keyframes slide-up {
+            from { transform: translateY(100%); }
+            to { transform: translateY(0); }
+        }
+
+        .player-wrapper {
+            position: relative;
+            width: 100%;
+            padding-top: 56.25%;
+            background: #000;
+            border-radius: 18px;
+            overflow: hidden;
+            box-shadow: 0 6px 20px rgba(0,0,0,0.25);
+        }
+
+        .player-wrapper iframe {
+            position: absolute;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            border: none;
+        }
+
+        /* App Fullscreen Container */
+        #app-fullscreen-container {
+            position: fixed;
+            top: 0; left: 0; width: 100vw; height: 100vh;
+            background: #000;
+            z-index: 99990;
+            display: none;
+            flex-direction: column;
+        }
+
+        #app-fullscreen-container.active {
+            display: flex;
+        }
+
+        .fullscreen-exit-btn {
+            position: absolute;
+            top: 16px;
+            right: 16px;
+            z-index: 99999;
+            background: rgba(0,0,0,0.6);
+            border-radius: 50%;
+            width: 48px;
+            height: 48px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            border: 2px solid #fff;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.4);
+        }
+
+        .fullscreen-exit-btn img {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+        }
+
+        .action-bar {
+            display: flex;
+            gap: 10px;
+            margin: 14px 0;
+            overflow-x: auto;
+            padding-bottom: 4px;
+        }
+
+        /* Shorts Container */
+        .shorts-container {
+            height: calc(100vh - 210px);
+            width: 100%;
+            max-width: 410px;
+            margin: 0 auto;
+            position: relative;
+            border-radius: 28px;
+            overflow: hidden;
+            background: #000;
+            box-shadow: 0 12px 36px rgba(0,0,0,0.35);
+        }
+
+        .shorts-player {
+            width: 100%;
+            height: 100%;
+            border: none;
+        }
+
+        .shorts-controls {
+            position: absolute;
+            right: 14px;
+            bottom: 44px;
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+            z-index: 10;
+        }
+
+        .shorts-btn {
+            width: 48px; height: 48px;
+            border-radius: 50%;
+            background: rgba(0,0,0,0.55);
+            backdrop-filter: blur(10px);
+            color: #fff;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            border: 1px solid rgba(255,255,255,0.2);
+            transition: transform 0.2s;
+        }
+
+        .shorts-btn:active {
+            transform: scale(0.9);
+        }
+
+        /* Loading Overlay */
+        #loading-overlay {
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: var(--md-sys-color-surface);
+            z-index: 99999;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            transition: opacity 0.6s var(--m3-easing-emphasized);
+        }
+
+        .polandball-loader {
+            width: 110px;
+            height: 110px;
+            border-radius: 50%;
+            animation: bounce 1.2s infinite alternate ease-in-out;
+            box-shadow: 0 8px 24px rgba(0,0,0,0.2);
+        }
+
+        @keyframes bounce {
+            0% { transform: translateY(0) scale(1); }
+            100% { transform: translateY(-28px) scale(1.06); }
+        }
+
+        .comment-item {
+            display: flex;
+            gap: 12px;
+            margin-bottom: 12px;
+            padding: 8px;
+            border-bottom: 1px solid rgba(128,128,128,0.12);
+        }
+        .comment-item img {
+            width: 32px; height: 32px; border-radius: 50%;
+        }
+        .comment-author {
+            font-size: 12px; font-weight: bold; margin-bottom: 2px;
+        }
+        .comment-text {
+            font-size: 13px; line-height: 1.35;
+        }
+    </style>
+</head>
+<body class="light-mode">
+
+    <!-- Loading Overlay (Polandball Loader) -->
+    <div id="loading-overlay">
+        <img src="https://raw.githubusercontent.com/PolandBallHub-Operator/pbimagesPublic/refs/heads/main/balls/poland/lol.png" alt="Polandball Loader" class="polandball-loader">
+    </div>
+
+    <!-- Liquid Animated Mesh Background -->
+    <div class="fluid-background">
+        <div class="fluid-blob"></div>
+        <div class="fluid-blob"></div>
+        <div class="fluid-blob"></div>
+    </div>
+
+    <!-- Dynamic Top Search Header Bar -->
+    <header>
+        <div class="app-brand" onclick="window.switchTab('home')">
+            <img src="https://raw.githubusercontent.com/PolandBallHub-Operator/pbimagesPublic/refs/heads/main/balls/poland/lol.png" alt="Polska Tube">
+            <h1>Polska tube</h1>
+        </div>
+
+        <!-- Dynamic Header Search Bar -->
+        <div class="header-search-bar">
+            <span class="material-symbols-outlined" style="color:var(--md-sys-color-on-surface-variant); font-size:20px;">search</span>
+            <input type="text" id="header-search-input" class="header-search-input" placeholder="YouTube 検索..." onkeydown="if(event.key==='Enter') window.executeSearch();">
+            <md-icon-button onclick="window.clearSearchInput()" style="--md-icon-button-state-layer-width:32px; --md-icon-button-state-layer-height:32px;">
+                <span class="material-symbols-outlined" style="font-size:18px;">close</span>
+            </md-icon-button>
+        </div>
+
+        <div class="header-controls">
+            <!-- Source Color Picker Button -->
+            <input type="color" id="source-color-picker" value="#6750a4" style="width:0; height:0; visibility:hidden; position:absolute;">
+            <md-icon-button onclick="document.getElementById('source-color-picker').click()" title="テーマ色選択">
+                <span class="material-symbols-outlined">palette</span>
+            </md-icon-button>
+            <md-icon-button onclick="window.toggleDarkMode()" title="ダークモード切り替え">
+                <span class="material-symbols-outlined" id="theme-icon">dark_mode</span>
+            </md-icon-button>
+            <md-icon-button onclick="window.openSettings()" title="設定">
+                <span class="material-symbols-outlined">settings</span>
+            </md-icon-button>
+        </div>
+    </header>
+
+    <main>
+        <!-- VIEW: HOME -->
+        <section id="view-home" class="view-section active">
+            <div id="data-saver-banner" class="glass-card" style="display:none; background: var(--md-sys-color-tertiary-container); color: var(--md-sys-color-on-tertiary-container);">
+                <div style="display:flex; align-items:center; gap:12px;">
+                    <span class="material-symbols-outlined">data_saver_on</span>
+                    <div>
+                        <strong>データ節約モード有効中</strong>
+                        <div style="font-size:12px;">自動読み込みを停止しています。上部検索バーから検索してください。</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="glass-card">
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:14px;">
+                    <h2 class="video-title" style="font-size:18px; margin:0;" id="home-section-title">おすすめ動画</h2>
+                    <md-icon-button onclick="window.loadHomeVideos()"><span class="material-symbols-outlined">refresh</span></md-icon-button>
+                </div>
+                <div id="home-video-grid" class="video-grid">
+                    <!-- Dynamic Home Video Cards -->
+                </div>
+            </div>
+        </section>
+
+        <!-- VIEW: SHORTS -->
+        <section id="view-shorts" class="view-section">
+            <div class="shorts-container" id="shorts-wrapper">
+                <iframe id="shorts-iframe" class="shorts-player" allow="autoplay; encrypted-media" allowfullscreen></iframe>
+                <div class="shorts-controls">
+                    <div class="shorts-btn" onclick="window.nextShort()"><span class="material-symbols-outlined">arrow_downward</span></div>
+                    <div class="shorts-btn" id="shorts-like-btn" onclick="window.toggleShortsLike()"><span class="material-symbols-outlined">favorite</span></div>
+                    <div class="shorts-btn" onclick="window.shareCurrentShort()"><span class="material-symbols-outlined">share</span></div>
+                </div>
+            </div>
+        </section>
+
+        <!-- VIEW: SUBSCRIPTIONS -->
+        <section id="view-subscriptions" class="view-section">
+            <div class="glass-card">
+                <h2 class="video-title" style="font-size:18px; margin-bottom:12px;">登録チャンネル一覧</h2>
+                <div id="subscriptions-list" style="display:flex; gap:16px; overflow-x:auto; padding:8px 0;">
+                    <!-- Subscription Avatars -->
+                </div>
+            </div>
+
+            <div class="glass-card">
+                <h2 class="video-title" style="font-size:18px; margin-bottom:12px;">登録チャンネルの最新動画</h2>
+                <div id="sub-video-grid" class="video-grid">
+                    <!-- Dynamic Channel Feed -->
+                </div>
+            </div>
+        </section>
+
+        <!-- VIEW: MY PAGE -->
+        <section id="view-mypage" class="view-section">
+            <div class="glass-card">
+                <h2 class="video-title" style="font-size:18px; margin-bottom:12px;">視聴履歴</h2>
+                <div id="history-video-grid" class="video-grid">
+                    <!-- History Grid -->
+                </div>
+            </div>
+
+            <div class="glass-card">
+                <h2 class="video-title" style="font-size:18px; margin-bottom:12px;">高評価した動画</h2>
+                <div id="liked-video-grid" class="video-grid">
+                    <!-- Liked Grid -->
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <!-- Floating Navigation Bar (Title-Free Design) -->
+    <div class="floating-nav-container">
+        <nav class="custom-nav">
+            <div class="nav-item active" id="nav-home" onclick="window.switchTab('home')" title="ホーム">
+                <div class="nav-icon-container">
+                    <span class="material-symbols-outlined">home</span>
+                </div>
+            </div>
+            <div class="nav-item" id="nav-shorts" onclick="window.switchTab('shorts')" title="ショート">
+                <div class="nav-icon-container">
+                    <span class="material-symbols-outlined">bolt</span>
+                </div>
+            </div>
+            <div class="nav-item" id="nav-subscriptions" onclick="window.switchTab('subscriptions')" title="登録チャンネル">
+                <div class="nav-icon-container">
+                    <span class="material-symbols-outlined">subscriptions</span>
+                </div>
+            </div>
+            <div class="nav-item" id="nav-mypage" onclick="window.switchTab('mypage')" title="マイページ">
+                <div class="nav-icon-container">
+                    <span class="material-symbols-outlined">account_circle</span>
+                </div>
+            </div>
+        </nav>
+    </div>
+
+    <!-- Video Player Modal Overlay -->
+    <div id="player-modal" class="modal-overlay">
+        <div class="modal-card">
+            <div style="display:flex; justify-content:flex-end;">
+                <md-icon-button onclick="window.closePlayerModal()"><span class="material-symbols-outlined">close</span></md-icon-button>
+            </div>
+            <div class="player-wrapper">
+                <iframe id="main-yt-player" src="" title="YouTube player" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen></iframe>
+            </div>
+            <h3 id="modal-video-title" class="video-title" style="font-size:16px; margin:14px 0 8px 0;">---</h3>
+            
+            <div style="display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:10px;">
+                <div style="display:flex; align-items:center; gap:10px; cursor:pointer;" id="modal-channel-btn">
+                    <img id="modal-channel-avatar" class="channel-avatar" src="" alt="channel">
+                    <div>
+                        <div id="modal-channel-title" style="font-size:14px; font-weight:bold;">---</div>
+                    </div>
+                </div>
+                <md-filled-button id="modal-subscribe-btn">チャンネル登録</md-filled-button>
+            </div>
+
+            <div class="action-bar">
+                <md-outlined-button id="modal-like-btn" onclick="window.toggleCurrentLike()">
+                    <span class="material-symbols-outlined" slot="icon">thumb_up</span> いいね
+                </md-outlined-button>
+                <md-outlined-button onclick="window.shareCurrentVideo()">
+                    <span class="material-symbols-outlined" slot="icon">share</span> 共有
+                </md-outlined-button>
+                <md-outlined-button onclick="window.enterAppFullscreen()">
+                    <span class="material-symbols-outlined" slot="icon">fullscreen</span> 全画面
+                </md-outlined-button>
+            </div>
+
+            <!-- Comments Section -->
+            <div id="comments-section" style="display:none; margin-top:16px; border-top: 1px solid rgba(128,128,128,0.2); padding-top:12px;">
+                <h4 style="margin: 0 0 12px 0;">コメント欄</h4>
+                <div id="comments-list"></div>
+            </div>
+
+            <!-- Related Videos Section -->
+            <h4 style="margin:18px 0 10px 0;">関連動画</h4>
+            <div id="related-video-grid" class="video-grid"></div>
+        </div>
+    </div>
+
+    <!-- Channel Details Modal -->
+    <div id="channel-modal" class="modal-overlay">
+        <div class="modal-card">
+            <div style="display:flex; justify-content:space-between; align-items:center;">
+                <h3 style="margin:0;">チャンネル詳細</h3>
+                <md-icon-button onclick="window.closeChannelModal()"><span class="material-symbols-outlined">close</span></md-icon-button>
+            </div>
+            <div style="display:flex; align-items:center; gap:16px; margin:16px 0;">
+                <img id="channel-page-avatar" class="channel-avatar" style="width:64px; height:64px;" src="" alt="avatar">
+                <div>
+                    <h3 id="channel-page-name" style="margin:0;">---</h3>
+                    <md-filled-button id="channel-page-sub-btn" style="margin-top:8px;">チャンネル登録</md-filled-button>
+                </div>
+            </div>
+            <h4 style="margin:16px 0 8px 0;">投稿動画</h4>
+            <div id="channel-video-grid" class="video-grid"></div>
+        </div>
+    </div>
+
+    <!-- Fullscreen Video Container -->
+    <div id="app-fullscreen-container">
+        <div class="fullscreen-exit-btn" onclick="window.exitAppFullscreen()" title="全画面解除">
+            <img src="https://raw.githubusercontent.com/PolandBallHub-Operator/pbimagesPublic/refs/heads/main/balls/poland/lol.png" alt="Poland Exit">
+        </div>
+        <iframe id="fullscreen-yt-player" style="width:100%; height:100%; border:none;" allow="autoplay; encrypted-media" allowfullscreen></iframe>
+    </div>
+
+    <!-- Settings Modal -->
+    <div id="settings-modal" class="modal-overlay">
+        <div class="modal-card">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px;">
+                <h3 style="margin:0;">設定</h3>
+                <md-icon-button onclick="window.closeSettings()"><span class="material-symbols-outlined">close</span></md-icon-button>
+            </div>
+            
+            <md-outlined-text-field id="api-key-input" label="YouTube Data API Key" placeholder="AIzaSy..." style="width:100%;">
+                <md-icon slot="leading-icon"><span class="material-symbols-outlined">key</span></md-icon>
+            </md-outlined-text-field>
+            <div style="font-size:11px; color:var(--md-sys-color-on-surface-variant); margin-bottom:16px;">APIキーはブラウザのIndexedDBに安全に保存されます。</div>
+
+            <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:16px;">
+                <div>
+                    <div style="font-weight:bold;">データ節約モード</div>
+                    <div style="font-size:12px; color:var(--md-sys-color-on-surface-variant);">ホームの自動読み込みを停止してクオータを節約</div>
+                </div>
+                <md-switch id="data-saver-switch"></md-switch>
+            </div>
+
+            <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:24px;">
+                <div>
+                    <div style="font-weight:bold;">コメント欄表示</div>
+                    <div style="font-size:12px; color:var(--md-sys-color-on-surface-variant);">動画詳細画面でコメントを表示</div>
+                </div>
+                <md-switch id="comments-switch"></md-switch>
+            </div>
+
+            <div style="display:flex; justify-content:flex-end; gap:8px;">
+                <md-filled-button onclick="window.saveSettings()">設定を保存</md-filled-button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Application Logic & Scripts -->
+    <script type="module">
+        import '@material/web/all.js';
+        import { 
+            argbFromHex, 
+            themeFromSourceColor, 
+            hexFromArgb
+        } from "@material/material-color-utilities";
+
+        // ==========================================
+        // --- 1. Global State & Config ---
+        // ==========================================
+        let isDarkMode = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+        let currentSourceColor = '#6750a4';
+
+        let apiKey = '';
+        let dataSaver = false;
+        let showComments = false;
+        let currentPlayingVideo = null;
+        let currentShortIndex = 0;
+        let shortsList = [];
+
+        // IndexedDB Configuration
+        const DB_NAME = 'PolskaTubeM3D_DB';
+        const DB_VERSION = 1;
+        let db = null;
+
+        // ==========================================
+        // --- 2. Material 3 Dynamic Color Engine ---
+        // ==========================================
+        window.updateTheme = function(hexColor) {
+            if (!hexColor || !hexColor.startsWith('#') || hexColor.length !== 7) return;
+            currentSourceColor = hexColor;
+
+            try {
+                const argb = argbFromHex(hexColor);
+                const theme = themeFromSourceColor(argb);
+                const scheme = isDarkMode ? theme.schemes.dark : theme.schemes.light;
+
+                const root = document.documentElement;
+                
+                const tokens = {
+                    'primary': scheme.primary,
+                    'on-primary': scheme.onPrimary,
+                    'primary-container': scheme.primaryContainer,
+                    'on-primary-container': scheme.onPrimaryContainer,
+                    'secondary': scheme.secondary,
+                    'on-secondary': scheme.onSecondary,
+                    'secondary-container': scheme.secondaryContainer,
+                    'on-secondary-container': scheme.onSecondaryContainer,
+                    'tertiary': scheme.tertiary,
+                    'on-tertiary': scheme.onTertiary,
+                    'tertiary-container': scheme.tertiaryContainer,
+                    'on-tertiary-container': scheme.onTertiaryContainer,
+                    'error': scheme.error,
+                    'on-error': scheme.onError,
+                    'error-container': scheme.errorContainer,
+                    'on-error-container': scheme.onErrorContainer,
+                    'background': scheme.background,
+                    'on-background': scheme.onBackground,
+                    'surface': scheme.surface,
+                    'on-surface': scheme.onSurface,
+                    'surface-variant': scheme.surfaceVariant,
+                    'on-surface-variant': scheme.onSurfaceVariant,
+                    'outline': scheme.outline,
+                    'outline-variant': scheme.outlineVariant,
+                    'inverse-surface': scheme.inverseSurface,
+                    'inverse-on-surface': scheme.inverseOnSurface,
+                    'inverse-primary': scheme.inversePrimary,
+                };
+
+                for (const [key, value] of Object.entries(tokens)) {
+                    const hex = hexFromArgb(value);
+                    root.style.setProperty(`--md-sys-color-${key}`, hex);
+                    
+                    const r = (value >> 16) & 0xff;
+                    const g = (value >> 8) & 0xff;
+                    const b = value & 0xff;
+                    root.style.setProperty(`--md-sys-color-${key}-rgb`, `${r}, ${g}, ${b}`);
+                }
+
+                const picker = document.getElementById('source-color-picker');
+                if(picker) picker.value = hexColor;
+            } catch (err) {
+                console.error("Failed to update dynamic color scheme:", err);
+            }
+        };
+
+        window.toggleDarkMode = function() {
+            isDarkMode = !isDarkMode;
+            document.body.classList.toggle('dark-mode', isDarkMode);
+            
+            const icon = document.getElementById('theme-icon');
+            if(icon) icon.textContent = isDarkMode ? 'light_mode' : 'dark_mode';
+            
+            window.updateTheme(currentSourceColor);
+        };
+
+        window.switchTab = function(tabId) {
+            document.querySelectorAll('.view-section').forEach(el => el.classList.remove('active'));
+            const targetView = document.getElementById('view-' + tabId);
+            if(targetView) targetView.classList.add('active');
+
+            document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
+            const targetNav = document.getElementById('nav-' + tabId);
+            if(targetNav) targetNav.classList.add('active');
+            
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+
+            if (tabId === 'shorts') {
+                window.loadShortsVideos();
+            } else if (tabId === 'subscriptions') {
+                window.loadSubscriptionsTab();
+            } else if (tabId === 'mypage') {
+                window.loadMyPageTab();
+            }
+        };
+
+        // ==========================================
+        // --- 3. IndexedDB Persistence Layer ---
+        // ==========================================
+        function initDB() {
+            return new Promise((resolve, reject) => {
+                const request = indexedDB.open(DB_NAME, DB_VERSION);
+                request.onupgradeneeded = (e) => {
+                    const database = e.target.result;
+                    if (!database.objectStoreNames.contains('settings')) {
+                        database.createObjectStore('settings', { keyPath: 'key' });
+                    }
+                    if (!database.objectStoreNames.contains('likes')) {
+                        database.createObjectStore('likes', { keyPath: 'id' });
+                    }
+                    if (!database.objectStoreNames.contains('subscriptions')) {
+                        database.createObjectStore('subscriptions', { keyPath: 'id' });
+                    }
+                    if (!database.objectStoreNames.contains('history')) {
+                        database.createObjectStore('history', { keyPath: 'id' });
+                    }
+                };
+                request.onsuccess = (e) => {
+                    db = e.target.result;
+                    resolve(db);
+                };
+                request.onerror = (e) => reject(e);
+            });
+        }
+
+        function getDBValue(storeName, key) {
+            return new Promise((resolve) => {
+                if (!db) return resolve(null);
+                const tx = db.transaction(storeName, 'readonly');
+                const store = tx.objectStore(storeName);
+                const req = store.get(key);
+                req.onsuccess = () => resolve(req.result ? req.result.value || req.result : null);
+                req.onerror = () => resolve(null);
+            });
+        }
+
+        function getAllDBValues(storeName) {
+            return new Promise((resolve) => {
+                if (!db) return resolve([]);
+                const tx = db.transaction(storeName, 'readonly');
+                const store = tx.objectStore(storeName);
+                const req = store.getAll();
+                req.onsuccess = () => resolve(req.result || []);
+                req.onerror = () => resolve([]);
+            });
+        }
+
+        function saveDBValue(storeName, item) {
+            return new Promise((resolve) => {
+                if (!db) return resolve();
+                const tx = db.transaction(storeName, 'readwrite');
+                const store = tx.objectStore(storeName);
+                store.put(item);
+                tx.oncomplete = () => resolve();
+            });
+        }
+
+        function removeDBValue(storeName, id) {
+            return new Promise((resolve) => {
+                if (!db) return resolve();
+                const tx = db.transaction(storeName, 'readwrite');
+                const store = tx.objectStore(storeName);
+                store.delete(id);
+                tx.oncomplete = () => resolve();
+            });
+        }
+
+        // ==========================================
+        // --- 4. YouTube Data API Engine ---
+        // ==========================================
+        async function fetchYouTubeData(endpoint, params) {
+            if (!apiKey) {
+                window.openSettings();
+                throw new Error("APIキーが設定されていません。設定画面で入力してください。");
+            }
+            const queryParams = new URLSearchParams({ ...params, key: apiKey });
+            const url = `https://www.googleapis.com/youtube/v3/${endpoint}?${queryParams.toString()}`;
+            const res = await fetch(url);
+            if (!res.ok) {
+                const err = await res.json().catch(() => ({}));
+                throw new Error(err.error?.message || "YouTube API リクエストに失敗しました");
+            }
+            return await res.json();
+        }
+
+        async function fetchChannelDetails(channelIds) {
+            if (!channelIds || channelIds.length === 0) return {};
+            try {
+                const uniqueIds = Array.from(new Set(channelIds));
+                const data = await fetchYouTubeData('channels', {
+                    part: 'snippet',
+                    id: uniqueIds.join(',')
+                });
+                const map = {};
+                if (data.items) {
+                    data.items.forEach(item => {
+                        map[item.id] = item.snippet.thumbnails.default?.url || item.snippet.thumbnails.medium?.url;
+                    });
+                }
+                return map;
+            } catch (e) {
+                return {};
+            }
+        }
+
+        // ==========================================
+        // --- 5. UI Renderers & Header Search ---
+        // ==========================================
+        window.loadHomeVideos = async function() {
+            const grid = document.getElementById('home-video-grid');
+            grid.innerHTML = `<div style="grid-column: 1/-1; text-align:center; padding: 30px;"><md-circular-progress indeterminate></md-circular-progress></div>`;
+
+            if (dataSaver) {
+                grid.innerHTML = '';
+                document.getElementById('data-saver-banner').style.display = 'block';
+                return;
+            }
+            document.getElementById('data-saver-banner').style.display = 'none';
+
+            try {
+                const data = await fetchYouTubeData('search', {
+                    part: 'snippet',
+                    maxResults: 20,
+                    type: 'video',
+                    q: 'Poland Polandball'
+                });
+
+                const channelIds = data.items.map(i => i.snippet.channelId);
+                const avatars = await fetchChannelDetails(channelIds);
+
+                renderVideoGrid(grid, data.items, avatars);
+            } catch (e) {
+                grid.innerHTML = `<div style="grid-column: 1/-1; color: var(--md-sys-color-error); text-align:center; padding: 20px;">エラー: ${e.message}</div>`;
+            }
+        };
+
+        window.clearSearchInput = function() {
+            const input = document.getElementById('header-search-input');
+            input.value = '';
+            input.focus();
+        };
+
+        window.executeSearch = async function() {
+            const query = document.getElementById('header-search-input').value.trim();
+            if (!query) return;
+
+            window.switchTab('home');
+
+            const grid = document.getElementById('home-video-grid');
+            grid.innerHTML = `<div style="grid-column: 1/-1; text-align:center; padding: 30px;"><md-circular-progress indeterminate></md-circular-progress></div>`;
+            document.getElementById('home-section-title').textContent = `「${query}」の検索結果`;
+
+            try {
+                const data = await fetchYouTubeData('search', {
+                    part: 'snippet',
+                    maxResults: 20,
+                    type: 'video',
+                    q: query
+                });
+                const channelIds = data.items.map(i => i.snippet.channelId);
+                const avatars = await fetchChannelDetails(channelIds);
+                renderVideoGrid(grid, data.items, avatars);
+            } catch (e) {
+                grid.innerHTML = `<div style="grid-column: 1/-1; color: var(--md-sys-color-error); text-align:center; padding: 20px;">エラー: ${e.message}</div>`;
+            }
+        };
+
+        function renderVideoGrid(container, items, avatars = {}) {
+            container.innerHTML = '';
+            if (!items || items.length === 0) {
+                container.innerHTML = `<div style="grid-column: 1/-1; text-align:center; padding: 20px;">動画が見つかりませんでした</div>`;
+                return;
+            }
+
+            items.forEach(item => {
+                const videoId = item.id.videoId || item.id;
+                const snippet = item.snippet;
+                const channelAvatar = avatars[snippet.channelId] || 'https://raw.githubusercontent.com/PolandBallHub-Operator/pbimagesPublic/refs/heads/main/balls/poland/lol.png';
+
+                const card = document.createElement('div');
+                card.className = 'video-card';
+                card.innerHTML = `
+                    <div class="thumbnail-container">
+                        <img src="${snippet.thumbnails.high?.url || snippet.thumbnails.medium?.url}" alt="${snippet.title}" loading="lazy">
+                    </div>
+                    <div class="video-info">
+                        <img class="channel-avatar" src="${channelAvatar}" alt="channel" onclick="event.stopPropagation(); window.openChannelPage('${snippet.channelId}', '${escapeHtml(snippet.channelTitle)}', '${channelAvatar}')">
+                        <div class="video-details">
+                            <h3 class="video-title">${snippet.title}</h3>
+                            <div class="video-meta">${snippet.channelTitle}</div>
+                        </div>
+                    </div>
+                `;
+                card.onclick = () => {
+                    const videoObj = {
+                        id: videoId,
+                        title: snippet.title,
+                        thumbnail: snippet.thumbnails.high?.url || snippet.thumbnails.medium?.url,
+                        channelId: snippet.channelId,
+                        channelTitle: snippet.channelTitle,
+                        channelAvatar: channelAvatar
+                    };
+                    window.openPlayerModal(videoObj);
+                };
+                container.appendChild(card);
+            });
+        }
+
+        function escapeHtml(str) {
+            return str.replace(/'/g, "\\'").replace(/"/g, '&quot;');
+        }
+
+        // ==========================================
+        // --- 6. Player Modal & Fixed Related Videos ---
+        // ==========================================
+        window.openPlayerModal = async function(video) {
+            currentPlayingVideo = video;
+            
+            // Add to History
+            await saveDBValue('history', { id: video.id, value: video, timestamp: Date.now() });
+
+            const modal = document.getElementById('player-modal');
+            modal.classList.add('active');
+
+            const iframe = document.getElementById('main-yt-player');
+            iframe.src = `https://www.youtube.com/embed/${video.id}?autoplay=1&enablejsapi=1`;
+
+            document.getElementById('modal-video-title').textContent = video.title;
+            document.getElementById('modal-channel-title').textContent = video.channelTitle;
+            document.getElementById('modal-channel-avatar').src = video.channelAvatar;
+
+            document.getElementById('modal-channel-btn').onclick = () => {
+                window.closePlayerModal();
+                window.openChannelPage(video.channelId, video.channelTitle, video.channelAvatar);
+            };
+
+            window.updateModalActionButtons(video);
+
+            const commentsSec = document.getElementById('comments-section');
+            if (showComments) {
+                commentsSec.style.display = 'block';
+                loadComments(video.id);
+            } else {
+                commentsSec.style.display = 'none';
+            }
+
+            // Fixed Related Videos Fetching Logic
+            loadRelatedVideos(video);
+        };
+
+        window.closePlayerModal = function() {
+            const modal = document.getElementById('player-modal');
+            modal.classList.remove('active');
+            document.getElementById('main-yt-player').src = '';
+        };
+
+        window.updateModalActionButtons = async function(video) {
+            const isLiked = await getDBValue('likes', video.id);
+            const likeBtn = document.getElementById('modal-like-btn');
+            likeBtn.variant = isLiked ? 'filled' : 'outlined';
+
+            const isSubbed = await getDBValue('subscriptions', video.channelId);
+            const subBtn = document.getElementById('modal-subscribe-btn');
+            subBtn.textContent = isSubbed ? '登録済み' : 'チャンネル登録';
+            subBtn.onclick = () => window.toggleSubscription(video.channelId, video.channelTitle, video.channelAvatar);
+        };
+
+        window.toggleCurrentLike = async function() {
+            if (!currentPlayingVideo) return;
+            const existing = await getDBValue('likes', currentPlayingVideo.id);
+            if (existing) {
+                await removeDBValue('likes', currentPlayingVideo.id);
+            } else {
+                await saveDBValue('likes', { id: currentPlayingVideo.id, value: currentPlayingVideo });
+            }
+            window.updateModalActionButtons(currentPlayingVideo);
+        };
+
+        window.toggleSubscription = async function(channelId, channelTitle, channelAvatar) {
+            const existing = await getDBValue('subscriptions', channelId);
+            if (existing) {
+                await removeDBValue('subscriptions', channelId);
+            } else {
+                await saveDBValue('subscriptions', { id: channelId, value: { id: channelId, title: channelTitle, avatar: channelAvatar } });
+            }
+            if (currentPlayingVideo && currentPlayingVideo.channelId === channelId) {
+                window.updateModalActionButtons(currentPlayingVideo);
+            }
+        };
+
+        window.shareCurrentVideo = function() {
+            if (!currentPlayingVideo) return;
+            const url = `https://www.youtube.com/watch?v=${currentPlayingVideo.id}`;
+            const tempInput = document.createElement('input');
+            document.body.appendChild(tempInput);
+            tempInput.value = url;
+            tempInput.select();
+            document.execCommand('copy');
+            document.body.removeChild(tempInput);
+            alert("動画のURLをクリップボードにコピーしました！");
+        };
+
+        window.enterAppFullscreen = function() {
+            if (!currentPlayingVideo) return;
+            const fsContainer = document.getElementById('app-fullscreen-container');
+            const fsIframe = document.getElementById('fullscreen-yt-player');
+            fsIframe.src = `https://www.youtube.com/embed/${currentPlayingVideo.id}?autoplay=1`;
+            fsContainer.classList.add('active');
+        };
+
+        window.exitAppFullscreen = function() {
+            const fsContainer = document.getElementById('app-fullscreen-container');
+            const fsIframe = document.getElementById('fullscreen-yt-player');
+            fsIframe.src = '';
+            fsContainer.classList.remove('active');
+        };
+
+        async function loadComments(videoId) {
+            const container = document.getElementById('comments-list');
+            container.innerHTML = '<md-circular-progress indeterminate></md-circular-progress>';
+            try {
+                const data = await fetchYouTubeData('commentThreads', {
+                    part: 'snippet',
+                    videoId: videoId,
+                    maxResults: 10
+                });
+                container.innerHTML = '';
+                if (!data.items || data.items.length === 0) {
+                    container.innerHTML = '<div style="font-size:12px;">コメントはありません</div>';
+                    return;
+                }
+                data.items.forEach(item => {
+                    const snippet = item.snippet.topLevelComment.snippet;
+                    const div = document.createElement('div');
+                    div.className = 'comment-item';
+                    div.innerHTML = `
+                        <img src="${snippet.authorProfileImageUrl}" alt="avatar">
+                        <div>
+                            <div class="comment-author">${snippet.authorDisplayName}</div>
+                            <div class="comment-text">${snippet.textDisplay}</div>
+                        </div>
+                    `;
+                    container.appendChild(div);
+                });
+            } catch (e) {
+                container.innerHTML = '<div style="font-size:12px; color:var(--md-sys-color-error);">コメントの取得に失敗しました</div>';
+            }
+        }
+
+        // Related Videos Fix: First try relatedToVideoId; if deprecated/failed, fallback to keyword search!
+        async function loadRelatedVideos(video) {
+            const grid = document.getElementById('related-video-grid');
+            grid.innerHTML = '<div style="grid-column: 1/-1; text-align:center; padding:12px;"><md-circular-progress indeterminate></md-circular-progress></div>';
+            
+            try {
+                // Try direct related API
+                let data = await fetchYouTubeData('search', {
+                    part: 'snippet',
+                    relatedToVideoId: video.id,
+                    type: 'video',
+                    maxResults: 8
+                }).catch(() => null);
+
+                // Fallback to title/keyword search if relatedToVideoId fails
+                if (!data || !data.items || data.items.length === 0) {
+                    const cleanKeyword = video.title.replace(/[^\w\s\u3000-\u303f\u3040-\u309f\u30a0-\u30ff\u4e00-\u9faf]/g, ' ').slice(0, 30);
+                    data = await fetchYouTubeData('search', {
+                        part: 'snippet',
+                        q: cleanKeyword || video.channelTitle,
+                        type: 'video',
+                        maxResults: 8
+                    });
+                }
+
+                if (data && data.items) {
+                    // Filter out current playing video
+                    const filteredItems = data.items.filter(i => (i.id.videoId || i.id) !== video.id);
+                    const channelIds = filteredItems.map(i => i.snippet.channelId);
+                    const avatars = await fetchChannelDetails(channelIds);
+                    renderVideoGrid(grid, filteredItems, avatars);
+                } else {
+                    grid.innerHTML = '<div style="grid-column:1/-1; font-size:12px; text-align:center;">関連動画が見つかりませんでした</div>';
+                }
+            } catch (e) {
+                grid.innerHTML = '<div style="grid-column:1/-1; font-size:12px; color:var(--md-sys-color-error); text-align:center;">関連動画を取得できませんでした</div>';
+            }
+        }
+
+        // ==========================================
+        // --- 7. Shorts, Channels & My Page ---
+        // ==========================================
+        window.loadShortsVideos = async function() {
+            if (shortsList.length === 0) {
+                try {
+                    const data = await fetchYouTubeData('search', {
+                        part: 'snippet',
+                        maxResults: 15,
+                        type: 'video',
+                        videoDuration: 'short',
+                        q: 'Shorts'
+                    });
+                    shortsList = data.items;
+                    currentShortIndex = 0;
+                } catch (e) {
+                    return;
+                }
+            }
+            window.playShortAtIndex(currentShortIndex);
+        };
+
+        window.playShortAtIndex = function(index) {
+            if (!shortsList[index]) return;
+            const video = shortsList[index];
+            const videoId = video.id.videoId || video.id;
+            const iframe = document.getElementById('shorts-iframe');
+            iframe.src = `https://www.youtube.com/embed/${videoId}?autoplay=1&loop=1`;
+        };
+
+        window.nextShort = function() {
+            currentShortIndex = (currentShortIndex + 1) % shortsList.length;
+            window.playShortAtIndex(currentShortIndex);
+        };
+
+        window.shareCurrentShort = function() {
+            if (!shortsList[currentShortIndex]) return;
+            const videoId = shortsList[currentShortIndex].id.videoId || shortsList[currentShortIndex].id;
+            const url = `https://www.youtube.com/shorts/${videoId}`;
+            const tempInput = document.createElement('input');
+            document.body.appendChild(tempInput);
+            tempInput.value = url;
+            tempInput.select();
+            document.execCommand('copy');
+            document.body.removeChild(tempInput);
+            alert("ショート動画のURLをコピーしました！");
+        };
+
+        window.openChannelPage = async function(channelId, channelTitle, avatarUrl) {
+            const modal = document.getElementById('channel-modal');
+            modal.classList.add('active');
+
+            document.getElementById('channel-page-name').textContent = channelTitle;
+            document.getElementById('channel-page-avatar').src = avatarUrl;
+
+            const isSub = await getDBValue('subscriptions', channelId);
+            const subBtn = document.getElementById('channel-page-sub-btn');
+            subBtn.textContent = isSub ? '登録済み' : 'チャンネル登録';
+            subBtn.onclick = () => window.toggleSubscription(channelId, channelTitle, avatarUrl);
+
+            const grid = document.getElementById('channel-video-grid');
+            grid.innerHTML = '<div style="grid-column:1/-1; text-align:center;"><md-circular-progress indeterminate></md-circular-progress></div>';
+
+            try {
+                const data = await fetchYouTubeData('search', {
+                    part: 'snippet',
+                    channelId: channelId,
+                    maxResults: 12,
+                    order: 'date',
+                    type: 'video'
+                });
+                const avatars = { [channelId]: avatarUrl };
+                renderVideoGrid(grid, data.items, avatars);
+            } catch (e) {
+                grid.innerHTML = '<div style="grid-column:1/-1; color:red; text-align:center;">チャンネル動画の取得に失敗しました</div>';
+            }
+        };
+
+        window.closeChannelModal = function() {
+            document.getElementById('channel-modal').classList.remove('active');
+        };
+
+        window.loadSubscriptionsTab = async function() {
+            const list = await getAllDBValues('subscriptions');
+            const subListContainer = document.getElementById('subscriptions-list');
+            subListContainer.innerHTML = '';
+
+            if (list.length === 0) {
+                subListContainer.innerHTML = '<div style="font-size:12px; padding:10px;">登録チャンネルはありません</div>';
+                document.getElementById('sub-video-grid').innerHTML = '';
+                return;
+            }
+
+            list.forEach(item => {
+                const sub = item.value;
+                const div = document.createElement('div');
+                div.style.textAlign = 'center';
+                div.style.cursor = 'pointer';
+                div.style.flexShrink = '0';
+                div.innerHTML = `
+                    <img class="channel-avatar" src="${sub.avatar}" alt="${sub.title}" style="width:52px; height:52px;">
+                    <div style="font-size:11px; margin-top:4px; max-width:64px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">${sub.title}</div>
+                `;
+                div.onclick = () => window.openChannelPage(sub.id, sub.title, sub.avatar);
+                subListContainer.appendChild(div);
+            });
+
+            // Load latest from first subscription
+            if (list[0]) {
+                const grid = document.getElementById('sub-video-grid');
+                grid.innerHTML = '<div style="grid-column:1/-1; text-align:center;"><md-circular-progress indeterminate></md-circular-progress></div>';
+                try {
+                    const data = await fetchYouTubeData('search', {
+                        part: 'snippet',
+                        channelId: list[0].value.id,
+                        maxResults: 10,
+                        type: 'video'
+                    });
+                    renderVideoGrid(grid, data.items, { [list[0].value.id]: list[0].value.avatar });
+                } catch (e) {
+                    grid.innerHTML = '';
+                }
+            }
+        };
+
+        window.loadMyPageTab = async function() {
+            const history = await getAllDBValues('history');
+            const likes = await getAllDBValues('likes');
+
+            const historyGrid = document.getElementById('history-video-grid');
+            const likesGrid = document.getElementById('liked-video-grid');
+
+            const historyItems = history.map(h => h.value).reverse().slice(0, 10);
+            renderStoredVideos(historyGrid, historyItems);
+
+            const likedItems = likes.map(l => l.value);
+            renderStoredVideos(likesGrid, likedItems);
+        };
+
+        function renderStoredVideos(container, videoList) {
+            container.innerHTML = '';
+            if (videoList.length === 0) {
+                container.innerHTML = '<div style="grid-column:1/-1; font-size:12px; text-align:center;">データがありません</div>';
+                return;
+            }
+            videoList.forEach(video => {
+                const card = document.createElement('div');
+                card.className = 'video-card';
+                card.innerHTML = `
+                    <div class="thumbnail-container">
+                        <img src="${video.thumbnail}" alt="${video.title}">
+                    </div>
+                    <div class="video-info">
+                        <img class="channel-avatar" src="${video.channelAvatar}" alt="avatar">
+                        <div class="video-details">
+                            <h3 class="video-title">${video.title}</h3>
+                            <div class="video-meta">${video.channelTitle}</div>
+                        </div>
+                    </div>
+                `;
+                card.onclick = () => window.openPlayerModal(video);
+                container.appendChild(card);
+            });
+        }
+
+        // ==========================================
+        // --- 8. Settings & Startup Protocol ---
+        // ==========================================
+        window.openSettings = function() {
+            document.getElementById('api-key-input').value = apiKey;
+            document.getElementById('data-saver-switch').selected = dataSaver;
+            document.getElementById('comments-switch').selected = showComments;
+            document.getElementById('settings-modal').classList.add('active');
+        };
+
+        window.closeSettings = function() {
+            document.getElementById('settings-modal').classList.remove('active');
+        };
+
+        window.saveSettings = async function() {
+            apiKey = document.getElementById('api-key-input').value.trim();
+            dataSaver = document.getElementById('data-saver-switch').selected;
+            showComments = document.getElementById('comments-switch').selected;
+
+            await saveDBValue('settings', { key: 'apiKey', value: apiKey });
+            await saveDBValue('settings', { key: 'dataSaver', value: dataSaver });
+            await saveDBValue('settings', { key: 'showComments', value: showComments });
+
+            window.closeSettings();
+            window.loadHomeVideos();
+        };
+
+        // Event listener for Color Picker Input & Change
+        const colorPicker = document.getElementById('source-color-picker');
+        if (colorPicker) {
+            colorPicker.addEventListener('input', (e) => window.updateTheme(e.target.value));
+            colorPicker.addEventListener('change', (e) => window.updateTheme(e.target.value));
+        }
+
+        window.addEventListener('load', async () => {
+            await initDB();
+            
+            apiKey = (await getDBValue('settings', 'apiKey')) || '';
+            dataSaver = (await getDBValue('settings', 'dataSaver')) || false;
+            showComments = (await getDBValue('settings', 'showComments')) || false;
+
+            window.updateTheme(currentSourceColor);
+            if(isDarkMode) document.body.classList.add('dark-mode');
+
+            // Hide Loading Overlay with Polandball
+            setTimeout(() => {
+                const overlay = document.getElementById('loading-overlay');
+                overlay.style.opacity = '0';
+                setTimeout(() => overlay.style.display = 'none', 600);
+            }, 1000);
+
+            if (!apiKey) {
+                window.openSettings();
+            } else {
+                window.loadHomeVideos();
+            }
+        });
+
+        // Touch Swipe Event for Shorts
+        let touchStartY = 0;
+        const shortsWrapper = document.getElementById('shorts-wrapper');
+        if (shortsWrapper) {
+            shortsWrapper.addEventListener('touchstart', e => {
+                touchStartY = e.touches[0].clientY;
+            });
+            shortsWrapper.addEventListener('touchend', e => {
+                const touchEndY = e.changedTouches[0].clientY;
+                if (touchStartY - touchEndY > 50) {
+                    window.nextShort();
+                }
+            });
+        }
+    </script>
+</body>
+</html>
